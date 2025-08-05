@@ -1,35 +1,28 @@
 "use client"
 
-import { 
-  Menu, 
-  Sun, 
-  Moon, 
-  Home, 
-  BarChart3, 
-  Users, 
-  Settings, 
-  FileText, 
-  ShoppingCart, 
-  CreditCard, 
-  Package,
-  UserPlus,
-  UserCheck,
-  Shield,
-  Bell,
-  Mail,
-  Calendar,
+import {
+  Menu,
+  Sun,
+  Moon,
+  Home,
+  BarChart3,
+  Users,
   TrendingUp,
   PieChart,
   Activity,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  AlertCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface SubItem {
   id: string;
   name: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
+  href?: string;
 }
 
 interface SidebarItem {
@@ -52,55 +45,19 @@ const sidebarItems: SidebarItem[] = [
     ]
   },
   {
-    id: 'users',
-    name: 'Users',
+    id: 'components',
+    name: 'Components',
     icon: Users,
     subItems: [
-      { id: 'all-users', name: 'All Users', icon: Users },
-      { id: 'add-user', name: 'Add User', icon: UserPlus },
-      { id: 'user-roles', name: 'User Roles', icon: UserCheck },
-      { id: 'permissions', name: 'Permissions', icon: Shield }
+      { id: 'accordion', name: 'Accordion', icon: ChevronDown, href: 'accordion' },
+      { id: 'alert', name: 'Alert', icon: AlertCircle, href: 'alert' },
     ]
   },
-  {
-    id: 'products',
-    name: 'Products',
-    icon: Package,
-    subItems: [
-      { id: 'inventory', name: 'Inventory', icon: Package },
-      { id: 'orders', name: 'Orders', icon: ShoppingCart },
-      { id: 'payments', name: 'Payments', icon: CreditCard },
-      { id: 'shipping', name: 'Shipping', icon: FileText }
-    ]
-  },
-  {
-    id: 'communications',
-    name: 'Communications',
-    icon: Mail,
-    subItems: [
-      { id: 'messages', name: 'Messages', icon: Mail },
-      { id: 'notifications', name: 'Notifications', icon: Bell },
-      { id: 'calendar', name: 'Calendar', icon: Calendar },
-      { id: 'announcements', name: 'Announcements', icon: FileText }
-    ]
-  },
-  {
-    id: 'settings',
-    name: 'Settings',
-    icon: Settings,
-    subItems: [
-      { id: 'general', name: 'General', icon: Settings },
-      { id: 'security', name: 'Security', icon: Shield },
-      { id: 'integrations', name: 'Integrations', icon: Package },
-      { id: 'billing', name: 'Billing', icon: CreditCard }
-    ]
-  }
 ];
 
-export default function Layout() {
+export default function Layout({ children }: { children: React.ReactNode }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState('overview');
   const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -121,22 +78,21 @@ export default function Layout() {
 
   const toggleItemExpansion = (itemId: string) => {
     if (isSidebarCollapsed) return;
-    
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
+
+    setExpandedItems(prev =>
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
   };
 
-  const handleSubItemClick = (subItemId: string) => {
-    setActiveItem(subItemId);
-    setIsMobileMenuOpen(false);
-  };
+  const pathname = usePathname();
 
   const getActiveItemName = () => {
     for (const item of sidebarItems) {
-      const subItem = item.subItems.find(sub => sub.id === activeItem);
+      const subItem = item.subItems.find(sub =>
+        sub.href && pathname.startsWith(`/dashboard/${sub.href}`)
+      );
       if (subItem) return subItem.name;
     }
     return 'Dashboard';
@@ -195,11 +151,10 @@ export default function Layout() {
                       )}
                     </div>
                     {!isSidebarCollapsed && (
-                      <ChevronDown 
-                        size={16} 
-                        className={`transform transition-transform ${
-                          expandedItems.includes(item.id) ? 'rotate-180' : ''
-                        }`}
+                      <ChevronDown
+                        size={16}
+                        className={`transform transition-transform ${expandedItems.includes(item.id) ? 'rotate-180' : ''
+                          }`}
                       />
                     )}
                   </button>
@@ -209,20 +164,27 @@ export default function Layout() {
                     <ul className="mt-2 space-y-1 pl-6">
                       {item.subItems.map((subItem) => (
                         <li key={subItem.id}>
-                          <button
-                            onClick={() => handleSubItemClick(subItem.id)}
-                            className={`
-                              w-full flex items-center space-x-3 p-2 rounded-lg text-left
-                              transition-colors duration-200
-                              ${activeItem === subItem.id 
-                                ? 'bg-black dark:bg-white text-white dark:text-black' 
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
-                              }
-                            `}
-                          >
-                            <subItem.icon size={16} className="flex-shrink-0" />
-                            <span className="text-sm">{subItem.name}</span>
-                          </button>
+                          {subItem.href ? (
+                            <Link
+                              href={`/dashboard/${subItem.href}`}
+                              className={`
+                                w-full flex items-center space-x-3 p-2 rounded-lg text-left
+                                transition-colors duration-200
+                                ${pathname.startsWith(`/dashboard/${subItem.href}`)
+                                  ? 'bg-black dark:bg-white text-white dark:text-black'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'}
+                              `}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <subItem.icon size={16} className="flex-shrink-0" />
+                              <span className="text-sm">{subItem.name}</span>
+                            </Link>
+                          ) : (
+                            <div className="w-full flex items-center space-x-3 p-2 rounded-lg text-left text-gray-400">
+                              <subItem.icon size={16} className="flex-shrink-0" />
+                              <span className="text-sm">{subItem.name}</span>
+                            </div>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -232,18 +194,27 @@ export default function Layout() {
                   {isSidebarCollapsed && (
                     <div className="ml-6 mt-1">
                       {item.subItems.map((subItem) => (
-                        <button
-                          key={subItem.id}
-                          onClick={() => handleSubItemClick(subItem.id)}
-                          className={`
-                            block w-2 h-2 rounded-full mb-1
-                            ${activeItem === subItem.id 
-                              ? 'bg-black dark:bg-white' 
-                              : 'bg-gray-400 dark:bg-gray-600 hover:bg-gray-600 dark:hover:bg-gray-400'
-                            }
-                          `}
-                          title={subItem.name}
-                        />
+                        subItem.href ? (
+                          <Link
+                            key={subItem.id}
+                            href={`/dashboard/${subItem.href}`}
+                            className={`
+        block w-2 h-2 rounded-full mb-1
+        ${pathname.startsWith(`/dashboard/${subItem.href}`)
+                                ? 'bg-black dark:bg-white'
+                                : 'bg-gray-400 dark:bg-gray-600 hover:bg-gray-600 dark:hover:bg-gray-400'
+                              }
+      `}
+                            title={subItem.name}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          />
+                        ) : (
+                          <span
+                            key={subItem.id}
+                            className="block w-2 h-2 rounded-full mb-1 bg-gray-400 dark:bg-gray-600"
+                            title={subItem.name}
+                          />
+                        )
                       ))}
                     </div>
                   )}
@@ -298,39 +269,20 @@ export default function Layout() {
                   <div className="flex items-center justify-center h-full min-h-[500px]">
                     <div className="text-center">
                       <div className="w-24 h-24 mx-auto mb-6 bg-black dark:bg-white rounded-full flex items-center justify-center">
-                        {sidebarItems.map(item => 
-                          item.subItems.find(sub => sub.id === activeItem)
-                        ).filter(Boolean).map(subItem => 
-                          subItem && <subItem.icon key={subItem.id} size={32} className="text-white dark:text-black" />
+                        {sidebarItems.flatMap(item =>
+                          item.subItems
+                            .filter(sub => sub.href && pathname.startsWith(`/dashboard/${sub.href}`))
+                            .map(subItem => (
+                              <subItem.icon key={subItem.id} size={32} className="text-white dark:text-black" />
+                            ))
                         )}
                       </div>
                       <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
                         {getActiveItemName()}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-lg max-w-md mx-auto">
-                        Esta página está lista para tu contenido. Aquí puedes agregar todos los componentes y funcionalidades específicas de {getActiveItemName().toLowerCase()}.
-                      </p>
-                      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center mb-3">
-                            <BarChart3 size={16} className="text-gray-700 dark:text-gray-300" />
-                          </div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Responsive</h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Optimizado para todos los dispositivos</p>
-                        </div>
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center mb-3">
-                            <Moon size={16} className="text-gray-700 dark:text-gray-300" />
-                          </div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Modo Oscuro</h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Tema claro y oscuro disponible</p>
-                        </div>
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center mb-3">
-                            <Settings size={16} className="text-gray-700 dark:text-gray-300" />
-                          </div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Personalizable</h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Fácil de modificar y extender</p>
+                      <div className="mt-8 gap-6 flex justify-center">
+                        <div className="p-4 bg-white min-w-4xl dark:bg-gray-700 rounded-lg">
+                          {children}
                         </div>
                       </div>
                     </div>
