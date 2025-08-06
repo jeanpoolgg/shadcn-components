@@ -51,6 +51,7 @@ const sidebarItems: SidebarItem[] = [
     subItems: [
       { id: 'accordion', name: 'Accordion', icon: ChevronDown, href: 'accordion' },
       { id: 'alert', name: 'Alert', icon: AlertCircle, href: 'alert' },
+      { id: 'button', name: 'Button', icon: AlertCircle, href: 'button' },
     ]
   },
 ];
